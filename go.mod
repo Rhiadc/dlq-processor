@@ -3,6 +3,7 @@ module github.com/dlqProcessor
 go 1.18
 
 require (
+	github.com/joho/godotenv v1.3.0
 	go.mongodb.org/mongo-driver v1.8.4
 	gopkg.in/DataDog/dd-trace-go.v1 v1.37.1
 )
