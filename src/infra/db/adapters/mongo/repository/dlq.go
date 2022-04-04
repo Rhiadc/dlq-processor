@@ -66,9 +66,11 @@ func (ref DLQRepository) GetMessagesByDateRange(days int) ([]DLQRecord, error) {
 	var DLQRecords []DLQRecord
 	coll := ref.database.Collection(DLQCollection)
 	cursor, err := coll.Find(context.TODO(), bson.M{"date": bson.M{
-		"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, days)),
-	}})
+		"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, days))},
+		"processed": bson.M{"$eq": false},
+	})
 	if err != nil {
+		fmt.Println(err)
 		defer cursor.Close(context.TODO())
 		return nil, err
 	}
@@ -88,7 +90,7 @@ func (ref DLQRepository) GetProcessedMessages() ([]DLQRecord, error) {
 	var DLQRecords []DLQRecord
 	coll := ref.database.Collection(DLQCollection)
 	cursor, err := coll.Find(context.TODO(), bson.M{
-		"processed": bson.M{"$ne": false},
+		"processed": bson.M{"$eq": true},
 	})
 	if err != nil {
 		defer cursor.Close(context.TODO())
@@ -103,8 +105,31 @@ func (ref DLQRepository) GetProcessedMessages() ([]DLQRecord, error) {
 		DLQRecords = append(DLQRecords, msg)
 
 	}
-	fmt.Println(DLQRecords)
 	return DLQRecords, nil
+}
+
+func (ref DLQRepository) SetProcessedMessage(date time.Time) error {
+	coll := ref.database.Collection(DLQCollection)
+	filter := bson.D{{"date", date}}
+	update := bson.D{{"$set", bson.D{{"processed", true}}}}
+	_, err := coll.UpdateOne(
+		context.TODO(),
+		filter,
+		update,
+	)
+	return err
+}
+
+func (ref DLQRepository) GetMessageByDate(date time.Time) (DLQRecord, error) {
+	var msg DLQRecord
+	coll := ref.database.Collection(DLQCollection)
+	err := coll.
+		FindOne(context.TODO(), bson.D{{"date", date}}).
+		Decode(&msg)
+	if err != nil {
+		return msg, err
+	}
+	return msg, nil
 }
 
 func (ref DLQRepository) DeleteMessageByDate(date time.Time) error {
