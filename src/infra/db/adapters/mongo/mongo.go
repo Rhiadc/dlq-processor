@@ -2,8 +2,9 @@ package mongo
 
 import (
 	"context"
-	"github.com/dlqProcessor/src/infra"
 	"log"
+
+	"github.com/dlqProcessor/src/infra"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -12,7 +13,7 @@ import (
 
 type MongoAdapter struct {
 	config *infra.Config
-	client *mongo.Client
+	Client *mongo.Client
 }
 
 func NewMongoClient(ctx context.Context, config *infra.Config) *MongoAdapter {
@@ -25,13 +26,13 @@ func NewMongoClient(ctx context.Context, config *infra.Config) *MongoAdapter {
 		log.Fatal(err.Error())
 	}
 
-	return &MongoAdapter{client: client, config: config}
+	return &MongoAdapter{Client: client, config: config}
 }
 
 func (ref MongoAdapter) GetDatabase() *mongo.Database {
-	return ref.client.Database(ref.config.MongoDBName)
+	return ref.Client.Database(ref.config.MongoDBName)
 }
 
 func (ref MongoAdapter) Close() error {
-	return ref.client.Disconnect(context.Background())
+	return ref.Client.Disconnect(context.Background())
 }
