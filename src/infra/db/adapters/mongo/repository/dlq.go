@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type DLQRecord struct {
@@ -42,11 +43,14 @@ func (ref DLQRepository) InsertMessage(m DLQRecord) error {
 	return nil
 }
 
-func (ref DLQRepository) GetAllMessages() ([]DLQRecord, error) {
+func (ref DLQRepository) GetAllMessages(page, limit uint64) ([]DLQRecord, error) {
 	var msg DLQRecord
 	var DLQRecords []DLQRecord
+
+	options := paginate(limit, page)
+
 	coll := ref.database.Collection(DLQCollection)
-	cursor, err := coll.Find(context.TODO(), bson.D{})
+	cursor, err := coll.Find(context.TODO(), bson.D{}, options)
 	if err != nil {
 		defer cursor.Close(context.TODO())
 		return nil, err
@@ -59,6 +63,7 @@ func (ref DLQRepository) GetAllMessages() ([]DLQRecord, error) {
 		}
 		DLQRecords = append(DLQRecords, msg)
 	}
+	//fmt.Println(DLQRecords)
 	return DLQRecords, nil
 }
 
@@ -140,4 +145,23 @@ func (ref DLQRepository) DeleteMessageByDate(date time.Time) error {
 		return err
 	}
 	return nil
+}
+
+func paginate(limit, page uint64) *options.FindOptions {
+
+	options := new(options.FindOptions)
+
+	if limit == 0 {
+		limit = 10
+	}
+
+	if page == 0 {
+		page = 1
+	}
+
+	options.SetSkip(int64((page - 1) * limit))
+	options.SetLimit(int64(limit))
+
+	return options
+
 }

@@ -1,9 +1,9 @@
 package infra
 
 import (
-	"github.com/joho/godotenv"
-	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -16,7 +16,11 @@ func NewConfig() *Config {
 	if os.Getenv("ENVIRONMENT") == "" {
 		err := godotenv.Load()
 		if err != nil {
-			log.Fatal("Error loading .env files")
+			return &Config{
+				MongoURI:    "mongodb://root:s3cr3t@localhost:27017",
+				MongoDBName: "dlq",
+				Environment: "",
+			}
 		}
 	}
 
